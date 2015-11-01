@@ -293,10 +293,12 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       throws SQLException {
     DefaultResultContext<Object> resultContext = new DefaultResultContext<Object>();
     skipRows(rsw.getResultSet(), rowBounds);
-    while (shouldProcessMoreRows(resultContext, rowBounds) && rsw.getResultSet().next()) {
-      ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(rsw.getResultSet(), resultMap, null);
-      Object rowValue = getRowValue(rsw, discriminatedResultMap);
-      storeObject(resultHandler, resultContext, rowValue, parentMapping, rsw.getResultSet());
+    if (rsw.getResultSet() != null) {
+      while (shouldProcessMoreRows(resultContext, rowBounds) && rsw.getResultSet().next()) {
+        ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(rsw.getResultSet(), resultMap, null);
+        Object rowValue = getRowValue(rsw, discriminatedResultMap);
+        storeObject(resultHandler, resultContext, rowValue, parentMapping, rsw.getResultSet());
+      }
     }
   }
 
@@ -319,13 +321,15 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   private void skipRows(ResultSet rs, RowBounds rowBounds) throws SQLException {
-    if (rs.getType() != ResultSet.TYPE_FORWARD_ONLY) {
-      if (rowBounds.getOffset() != RowBounds.NO_ROW_OFFSET) {
-        rs.absolute(rowBounds.getOffset());
-      }
-    } else {
-      for (int i = 0; i < rowBounds.getOffset(); i++) {
-        rs.next();
+    if (rs != null) {
+      if (rs.getType() != ResultSet.TYPE_FORWARD_ONLY) {
+        if (rowBounds.getOffset() != RowBounds.NO_ROW_OFFSET) {
+          rs.absolute(rowBounds.getOffset());
+        }
+      } else {
+        for (int i = 0; i < rowBounds.getOffset(); i++) {
+          rs.next();
+        }
       }
     }
   }
